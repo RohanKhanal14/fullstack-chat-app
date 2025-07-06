@@ -3,32 +3,41 @@ kind: Deployment
 metadata:
   name: backend-deployment
   namespace: chat-app
+  labels:
+    app: backend-deployment
 spec:
   replicas: 1
-  selector:
+  selector:                     # this selector is used to match the pods managed by this deployment
     matchLabels:
-      app: backend
-  template:
+      app: backend-deployment   # this one should match the label in the pod template
+  template:                     # this is the pod template
     metadata:
       name: backend-pod
       namespace: chat-app
-      labels: 
-        app: backend
+      labels:
+        app: backend-deployment
     spec:
       containers:
-      - name: chatapp-backend
-        image: trainwithshubham/chatapp-backend:latest
-        ports:
-        - containerPort: 5001
-        env:
-        - name: NODE_ENV
-          value: production
-        - name: MONGODB_URI
-          value: "mongodb://mongoadmin:secret@mongodb:27017/dbname?authSource=admin"
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: chatapp-secrets
-              key: jwt 
-        - name: PORT
-          value: "5001"
+        - name: chatapp-backend
+          image: rohankhanal14/chatapp-backend:latest
+          ports:
+            - containerPort: 5001
+          env:
+            - name: NODE_ENV  # environment variable to set the node environment check the docker file for this 
+              value: "production"
+
+            - name: MONGODB_URI  # environment variable to set the node environment check the docker file for this 
+              value: "mongodb+srv://root:toor@cluster0.oadytbk.mongodb.net/"
+
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: chatapp-secrets  # this should match the name of the secret created in k8s/secrets.yml
+                  key: jwt               # this should match the key in the secret data
+              
+            - name: PORT  # environment variable to set the node environment check the docker file for this 
+              value: "5001"
+            
+            
+
+
