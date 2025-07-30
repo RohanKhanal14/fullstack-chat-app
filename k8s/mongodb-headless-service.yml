@@ -1,0 +1,17 @@
+# Headless Service for StatefulSet (required)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-headless
+  namespace: chat-app
+  labels:
+    app: mongodb
+    component: headless-service
+spec:
+  clusterIP: None  # Makes it headless
+  selector:
+    app: mongodb
+  ports:
+    - port: 27017
+      targetPort: 27017
+      name: mongodb

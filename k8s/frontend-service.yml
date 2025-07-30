@@ -5,7 +5,7 @@ metadata:
   namespace: chat-app
 spec:
   selector:
-    app: frontend-deployment # this should match the label in the frontend deployment
+    app: frontend # this should match the label in the frontend deployment
   ports:
   - port: 80  # this is the port that the service will expose
     targetPort: 80  # this is the port that the frontend container listens on

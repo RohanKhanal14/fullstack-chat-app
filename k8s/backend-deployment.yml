@@ -4,7 +4,7 @@ metadata:
   name: backend-deployment
   namespace: chat-app
   labels:
-    app: backend-deployment
+    app: backend
 spec:
   replicas: 1
   selector:                     # this selector is used to match the pods managed by this deployment
@@ -27,7 +27,8 @@ spec:
               value: "production"
 
             - name: MONGODB_URI  # environment variable to set the node environment check the docker file for this 
-              value: "mongodb+srv://root:toor@cluster0.oadytbk.mongodb.net/"
+              # value: "mongodb+srv://root:toor@cluster0.oadytbk.mongodb.net/"
+              value: "mongodb://root:toor@mongodb-service:27017/chatapp"
 
             - name: JWT_SECRET
               valueFrom:

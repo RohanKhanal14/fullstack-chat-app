@@ -1,39 +1,65 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: mongodb-deployment
+  name: mongodb
   namespace: chat-app
   labels:
-    app: mongodb-deployment
+    app: mongodb
 spec:
+  serviceName: mongodb-headless  # Required for StatefulSet
   replicas: 1
-  selector:                     # this selector is used to match the pods managed by this deployment
+  selector:
     matchLabels:
-      app: mongodb-deployment   # this one should match the label in the pod template
-  template:                     # this is the pod template
+      app: mongodb
+  template:
     metadata:
-      name: mongodb-pod
-      namespace: chat-app
       labels:
-        app: mongodb-deployment
+        app: mongodb
     spec:
       containers:
-        - name: chatapp-mongodb
-          image: mongo:latest
+        - name: mongodb
+          image: mongo:7.0  # Use specific version instead of 'latest'
           ports:
-            - containerPort: 27017 # this is the port that the container will listen on
+            - containerPort: 27017
+              name: mongodb
           env: 
             - name: MONGO_INITDB_ROOT_USERNAME
               value: "root"
             - name: MONGO_INITDB_ROOT_PASSWORD
               value: "toor"
-      volumes:
-        - name: mongodb-storage
-          persistentVolumeClaim:
-            claimName: mongodb-pvc # this is the name of the PVC that we created earlier
----
-# Note: This deployment assumes that the PersistentVolumeClaim `mongodb-pvc` has already been created and is available in the `chat-app` namespace.
-# The PVC should be defined in a separate YAML file (e.g., `mongodb-pvc.yml`) and applied before this deployment.
-# The PVC should request storage from a PersistentVolume that is also defined in a separate YAML file (e.g., `mongodb-pv.yml`).
-# Ensure that the PVC and PV are properly configured to 
+            - name: MONGO_INITDB_DATABASE
+              value: "chatapp"
+          volumeMounts:
+            - name: mongodb-storage
+              mountPath: /data/db
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            tcpSocket:
+              port: 27017
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: 27017
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+  # StatefulSet automatically creates PVC for each pod
+  volumeClaimTemplates:
+    - metadata:
+        name: mongodb-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi 
             

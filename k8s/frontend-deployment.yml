@@ -4,18 +4,18 @@ metadata:
   name: frontend-deployment
   namespace: chat-app
   labels:
-    app: frontend-deployment
+    app: frontend
 spec:
   replicas: 1
   selector:                     # this selector is used to match the pods managed by this deployment
     matchLabels:
-      app: frontend-deployment   # this one should match the label in the pod template
+      app: frontend   # this one should match the label in the pod template
   template:                     # this is the pod template
     metadata:
       name: frontend-pod
       namespace: chat-app
       labels:
-        app: frontend-deployment
+        app: frontend
     spec:
       containers:
         - name: chatapp-frontend

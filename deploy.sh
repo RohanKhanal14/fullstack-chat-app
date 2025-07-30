@@ -67,9 +67,9 @@ check_k8s_files() {
     local required_files=(
         "k8s/namespace.yml"
         "k8s/secrets.yml"
-        "k8s/mongodb-pv.yml"
-        "k8s/mongodb-pvc.yml"
         "k8s/mongodb-deployment.yml"
+        "k8s/mongodb-headless-service.yml"
+        "k8s/mongodb-service.yml"
         "k8s/backend-deployment.yml"
         "k8s/backend-service.yml"
         "k8s/frontend-deployment.yml"
@@ -100,6 +100,24 @@ wait_for_deployment() {
         print_status "Checking pod status..."
         kubectl get pods -n $namespace | grep $deployment
         kubectl describe deployment $deployment -n $namespace
+        exit 1
+    fi
+}
+
+# Function to wait for StatefulSet to be ready
+wait_for_statefulset() {
+    local statefulset=$1
+    local namespace=$2
+    local timeout=${3:-300}
+    
+    print_status "Waiting for StatefulSet $statefulset to be ready..."
+    if kubectl wait --for=condition=ready --timeout=${timeout}s pod/${statefulset}-0 -n $namespace; then
+        print_success "StatefulSet $statefulset is ready"
+    else
+        print_error "StatefulSet $statefulset failed to become ready within ${timeout} seconds"
+        print_status "Checking pod status..."
+        kubectl get pods -n $namespace | grep $statefulset
+        kubectl describe statefulset $statefulset -n $namespace
         exit 1
     fi
 }
@@ -136,30 +154,29 @@ deploy_application() {
     kubectl apply -f k8s/secrets.yml
     print_success "Secrets created"
     
-    # Step 3: Setup MongoDB Storage
-    print_status "Setting up MongoDB persistent storage..."
-    kubectl apply -f k8s/mongodb-pv.yml
-    kubectl apply -f k8s/mongodb-pvc.yml
-    print_success "MongoDB storage configured"
-    
-    # Step 4: Deploy MongoDB
-    print_status "Deploying MongoDB..."
+    # Step 3: Deploy MongoDB StatefulSet
+    print_status "Deploying MongoDB StatefulSet..."
     kubectl apply -f k8s/mongodb-deployment.yml
-    wait_for_deployment "mongodb-deployment" "chat-app" 300
     
-    # Step 5: Deploy Backend
+    print_status "Creating MongoDB services..."
+    kubectl apply -f k8s/mongodb-headless-service.yml
+    kubectl apply -f k8s/mongodb-service.yml
+    
+    wait_for_statefulset "mongodb" "chat-app" 300
+    
+    # Step 4: Deploy Backend
     print_status "Deploying backend service..."
     kubectl apply -f k8s/backend-deployment.yml
     kubectl apply -f k8s/backend-service.yml
     wait_for_deployment "backend-deployment" "chat-app" 300
     
-    # Step 6: Deploy Frontend
+    # Step 5: Deploy Frontend
     print_status "Deploying frontend service..."
     kubectl apply -f k8s/frontend-deployment.yml
     kubectl apply -f k8s/frontend-service.yml
     wait_for_deployment "frontend-deployment" "chat-app" 300
     
-    # Step 7: Setup Ingress
+    # Step 6: Setup Ingress
     print_status "Setting up ingress..."
     kubectl apply -f k8s/ingress.yml
     print_success "Ingress configured"
@@ -226,6 +243,7 @@ show_access_info() {
     print_status "Alternative access methods:"
     echo "  Frontend port-forward: kubectl port-forward service/frontend 8080:80 -n chat-app"
     echo "  Backend port-forward:  kubectl port-forward service/backend 5001:5001 -n chat-app"
+    echo "  MongoDB port-forward:  kubectl port-forward service/mongodb 27017:27017 -n chat-app"
 }
 
 # Function to run basic health checks
