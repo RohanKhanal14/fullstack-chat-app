@@ -69,7 +69,6 @@ check_k8s_files() {
         "k8s/secrets.yml"
         "k8s/mongodb-deployment.yml"
         "k8s/mongodb-headless-service.yml"
-        "k8s/mongodb-service.yml"
         "k8s/backend-deployment.yml"
         "k8s/backend-service.yml"
         "k8s/frontend-deployment.yml"
@@ -153,28 +152,29 @@ deploy_application() {
     print_status "Creating secrets..."
     kubectl apply -f k8s/secrets.yml
     print_success "Secrets created"
+
+    print_status "Creating ConfigMap..."
+    kubectl apply -f k8s/configmap.yml  
     
     # Step 3: Deploy MongoDB StatefulSet
     print_status "Deploying MongoDB StatefulSet..."
     kubectl apply -f k8s/mongodb-deployment.yml
     
-    print_status "Creating MongoDB services..."
+    print_status "Creating MongoDB headless service..."
     kubectl apply -f k8s/mongodb-headless-service.yml
-    kubectl apply -f k8s/mongodb-service.yml
     
-    wait_for_statefulset "mongodb" "chat-app" 300
     
     # Step 4: Deploy Backend
     print_status "Deploying backend service..."
     kubectl apply -f k8s/backend-deployment.yml
     kubectl apply -f k8s/backend-service.yml
-    wait_for_deployment "backend-deployment" "chat-app" 300
+    
     
     # Step 5: Deploy Frontend
     print_status "Deploying frontend service..."
     kubectl apply -f k8s/frontend-deployment.yml
     kubectl apply -f k8s/frontend-service.yml
-    wait_for_deployment "frontend-deployment" "chat-app" 300
+    
     
     # Step 6: Setup Ingress
     print_status "Setting up ingress..."
@@ -234,14 +234,14 @@ show_access_info() {
             print_success "Then access the application at: http://chat-tws.com"
         else
             print_warning "Ingress IP is still pending. You can use port forwarding instead:"
-            echo "    kubectl port-forward service/frontend 8080:80 -n chat-app"
-            echo "    Then access at: http://localhost:8080"
+            echo "    kubectl port-forward service/frontend 8081:80 -n chat-app"
+            echo "    Then access at: http://localhost:8081"
         fi
     fi
     
     echo
     print_status "Alternative access methods:"
-    echo "  Frontend port-forward: kubectl port-forward service/frontend 8080:80 -n chat-app"
+    echo "  Frontend port-forward: kubectl port-forward service/frontend 8081:80 -n chat-app"
     echo "  Backend port-forward:  kubectl port-forward service/backend 5001:5001 -n chat-app"
     echo "  MongoDB port-forward:  kubectl port-forward service/mongodb 27017:27017 -n chat-app"
 }
@@ -325,7 +325,6 @@ main() {
             echo
             show_access_info
             echo
-            run_health_checks
             ;;
         "status")
             check_kubectl

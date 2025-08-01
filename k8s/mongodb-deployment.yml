@@ -24,14 +24,23 @@ spec:
               name: mongodb
           env: 
             - name: MONGO_INITDB_ROOT_USERNAME
-              value: "root"
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: MONGO_INITDB_ROOT_USERNAME
             - name: MONGO_INITDB_ROOT_PASSWORD
-              value: "toor"
+              valueFrom:
+                secretKeyRef:
+                  name: chatapp-secrets
+                  key: mongodb-pass
             - name: MONGO_INITDB_DATABASE
-              value: "chatapp"
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: MONGO_INITDB_DATABASE
           volumeMounts:
             - name: mongodb-storage
-              mountPath: /data/db
+              mountPath: /data/db  # inside pod
           resources:
             requests:
               memory: "256Mi"
@@ -39,20 +48,6 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
-          livenessProbe:
-            tcpSocket:
-              port: 27017
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-          readinessProbe:
-            tcpSocket:
-              port: 27017
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
   # StatefulSet automatically creates PVC for each pod
   volumeClaimTemplates:
     - metadata:

@@ -22,7 +22,17 @@ spec:
           image: rohankhanal14/chatapp-frontend:latest
           ports:
             - containerPort: 80 # this is the port that the container will listen on
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
           env: 
-            - name: NODE_ENV  # environment variable to set the node environment check the docker file for this 
-              value: "production"
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: NODE_ENV
             

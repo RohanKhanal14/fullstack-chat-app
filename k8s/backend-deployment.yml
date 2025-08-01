@@ -22,13 +22,26 @@ spec:
           image: rohankhanal14/chatapp-backend:latest
           ports:
             - containerPort: 5001
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
           env:
             - name: NODE_ENV  # environment variable to set the node environment check the docker file for this 
-              value: "production"
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: NODE_ENV
 
             - name: MONGODB_URI  # environment variable to set the node environment check the docker file for this 
               # value: "mongodb+srv://root:toor@cluster0.oadytbk.mongodb.net/"
-              value: "mongodb://root:toor@mongodb-service:27017/chatapp"
+              valueFrom:
+                secretKeyRef:
+                  name: chatapp-secrets  # this should match the name of the secret created in k8s/secrets.yml
+                  key: mongodb-url
 
             - name: JWT_SECRET
               valueFrom:
@@ -37,7 +50,10 @@ spec:
                   key: jwt               # this should match the key in the secret data
               
             - name: PORT  # environment variable to set the node environment check the docker file for this 
-              value: "5001"
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: PORT
             
             
 
