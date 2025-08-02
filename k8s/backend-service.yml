@@ -5,7 +5,7 @@ metadata:
   namespace: chat-app
 spec:
   selector:
-    app: backend # this should match the label in the backend deployment
+    app: backend-deployment # this should match the label in the backend deployment
   type: ClusterIP  # or LoadBalancer, NodePort, etc. depending on your requirements
   # If you want to expose the service outside the cluster, you can use LoadBalancer
   # or NodePort type.

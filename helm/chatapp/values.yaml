@@ -1,0 +1,94 @@
+# Default values for chatapp.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Namespace
+namespace: chat-app
+
+# Global configuration
+global:
+  nodeEnv: "production"
+
+# Frontend configuration
+frontend:
+  replicaCount: 1
+  image:
+    repository: rohankhanal14/chatapp-frontend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 250m
+      memory: 64Mi
+
+# Backend configuration
+backend:
+  replicaCount: 1
+  image:
+    repository: rohankhanal14/chatapp-backend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  service:
+    type: ClusterIP
+    port: 5001
+    targetPort: 5001
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# MongoDB configuration
+mongodb:
+  connectionString: "mongodb+srv://root:toor@cluster0.oadytbk.mongodb.net/"
+
+# JWT Secret (base64 encoded)
+jwt:
+  secret: "ZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKU2IyeGxJam9pUVdSdGFXNGlMQ0pKYzNOMVpYSWlPaUpKYzNOMVpYSWlMQ0pWYzJWeWJtRnRaU0k2SWtwaGRtRkpibFZ6WlNJc0ltVjRjQ0k2TVRjek5EUXpPREEyTml3aWFXRjBJam94TnpNME5ETTRNRFkyZlEuY0t6NXYzNm9yZ05HMlNIYTVKRHZwOU5ENXA2SUJKeTJKS1RtOGpQOUdkUQ=="
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: ""
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  hosts:
+    - host: chat-tws.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: backend
+
+# Service Account
+serviceAccount:
+  create: false
+  name: ""
+
+# Pod annotations
+podAnnotations: {}
+
+# Security contexts
+podSecurityContext: {}
+securityContext: {}
+
+# Node selector, tolerations, and affinity
+nodeSelector: {}
+tolerations: []
+affinity: {}

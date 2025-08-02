@@ -20,13 +20,26 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://chat-tws.com"],
     credentials: true,
   }),
 );
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
+
+// Add a simple health check endpoint that doesn't require authentication
+app.get("/api/health", (req, res) => {
+  res.json({ 
+    status: "healthy",
+    message: "ChatApp API is running",
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      auth: "/api/auth",
+      messages: "/api/messages"
+    }
+  });
+});
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
